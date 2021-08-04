@@ -74,14 +74,23 @@ dataloader = DataLoader(data, batch_size=4, shuffle=True)
 images, labels = next(iter(dataloader))
 print(f"Feature batch shape: {images.size()}")
 print(f"Labels batch shape: {labels.size()}")
-img = images[0].squeeze()
-label = labels[0]
+#img = images[0].squeeze()
+#label = labels[0]
 
 images = [img.swapaxes(0,1).swapaxes(1, 2) for img in images]
-#img = img.swapaxes(0,1).swapaxes(1,2)
-print(f"Label: {label}")
-plt.imshow(images[0])
+print(f"Label: {labels}")
+_, pltarr = plt.subplots(2, 2)
+plt.subplots_adjust(hspace=0.3)
+count = 0
+for i in range(2):
+    for j in range(2):
+        pltarr[i][j].imshow(images[count])
+        pltarr[i,j].set_title(str(labels[count]))
+        count += 1
 plt.show()
+#img = img.swapaxes(0,1).swapaxes(1,2)
+#plt.imshow(images[0])
+
 
 
 
