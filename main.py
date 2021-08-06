@@ -2,7 +2,39 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import time
+import pyautogui as pg
+import PIL
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.transforms as transforms
 #from IPython.display import clear_output #for colab
+
+
+classes = (0, 90, 180, 270)
+
+
+##################################################################################
+# Convolutional Neural Network
+class CNN(nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 3) # 61, 61
+        self.conv2 = nn.Conv2d(6, 16, 4) # 28, 28
+        self.conv3 = nn.Conv2d(16, 32, 3) #  12, 12
+        self.fc1 = nn.Linear(32 * 6 * 6, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 4)
+
+    def forward(self, x):
+        x = F.max_pool2d(F.relu(self.conv1(x)), 2, 2) # 62, 62 -> 31, 31
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2, 2) # 28, 28 -> 14, 14
+        x = F.max_pool2d(F.relu(self.conv3(x)), 2, 2) # 12, 12 -> 6, 6
+        x = x.view(-1, 32 * 6 * 6)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 
 def rotate_image(image, angle):
@@ -33,24 +65,46 @@ def resize_image(image, width, height):
     result = cv2.resize(image, dsize=(width, height), interpolation=cv2.INTER_AREA)
     return result
 
-img = cv2.imread("trash/image.jpg")
+###################################
+model = CNN()
+PATH = './trained_model/cnn.pth'
+model.load_state_dict(torch.load(PATH))
+###################################
+
+tf = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+w_size = pg.size() # w_size[0]: width, w_size[1]: height
+
+while True:
+    img = PIL.ImageGrab.grab((30, 150, 800, 550)) # x_left, y_left, x_right, y_right
+    img_small = img.resize((64, 64))
+    img_tensor = tf(img_small)
+    img_tensor = torch.unsqueeze(img_tensor, 0)
+
+    output = model(img_tensor)
+    _, predicted = torch.max(output, 1) #returns value, index
+    print(output, classes[predicted])
+
+    img_frame = np.array(img)
+    img_frame = cv2.cvtColor(img_frame, cv2.COLOR_RGB2BGR)
+    mywin = "mywindow"
+    cv2.namedWindow(mywin)   # create a named window
+    cv2.moveWindow(mywin, 1540, 100)   # Move it to (40, 30)
+    cv2.imshow(mywin, img_frame)
+    if cv2.waitKey(100) == ord('q'):
+        #cv2.destroyAllWindows()
+        break
+cv2.destroyAllWindows()
+
+
+
+#img = cv2.imread("trash/image.jpg")
 # img90 = rotate_image(img, 90)
 # cv2.imwrite("image90.jpg", img90)
 
-mywin = "mywindow"
-cv2.namedWindow(mywin)   # create a named window
-cv2.moveWindow(mywin, 1540, 100)   # Move it to (40, 30)
 
-for i in range(0, 360, 30):
-    img2 = rotate_image(img, i)
-    img3 = resize_image(img2, 200, 200)
-    cv2.imshow(mywin, img3)
-    cv2.waitKey(1000)
-    cv2.destroyAllWindows()
-
-    # img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)  # cv2 uses BGR, pyplot uses RGB
-    #plt.imshow(img2)
-    #plt.show()
-    #time.sleep(2)
-    #plt.clf()
-    #clear_output() #for colab
+#for i in range(0, 360, 30):
+#    img2 = rotate_image(img, i)
+#    img3 = resize_image(img2, 200, 200)
+#    cv2.imshow(mywin, img3)
+#    cv2.waitKey(1000)
+#    cv2.destroyAllWindows()

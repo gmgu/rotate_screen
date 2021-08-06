@@ -77,7 +77,7 @@ print(f"Labels batch shape: {labels.size()}")
 #img = images[0].squeeze()
 #label = labels[0]
 
-images = [img.swapaxes(0,1).swapaxes(1, 2) for img in images]
+images = [img.swapaxes(0, 1).swapaxes(1, 2) for img in images]
 print(f"Label: {labels}")
 _, pltarr = plt.subplots(2, 2)
 plt.subplots_adjust(hspace=0.3)
