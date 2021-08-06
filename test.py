@@ -14,12 +14,10 @@ import pandas as pd
 from torchvision.io import read_image
 import PIL
 
-
 # Hyper-parameters
 num_epochs = 10
 batch_size = 32
 learning_rate = 0.001
-
 
 ##################################################################################
 # DataSet
@@ -61,14 +59,6 @@ train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-
-images, labels = next(iter(train_loader))
-print(f"Feature batch shape: {images.size()}")
-print(f"Labels batch shape: {labels.size()}")
-print(images[0].shape, type(images[0]), images[0])
-print(labels[0].shape, type(labels[0]), labels[0])
-
-
 ##################################################################################
 # Convolutional Neural Network
 class CNN(nn.Module):
@@ -93,36 +83,9 @@ class CNN(nn.Module):
 
 
 model = CNN()
-
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-print("total batch: ", len(train_loader))
-
-for epoch in range(num_epochs):
-    running_loss = 0.0
-    for i, data in enumerate(train_loader):
-        images, labels = data
-        optimizer.zero_grad()
-
-        #Forward
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-
-        #Backward
-        loss.backward()
-        optimizer.step()
-
-        running_loss += loss.item()
-        if i % 100 == 99:
-            print("Epoch: {}, Iter: {}, Loss: {}".format(epoch + 1, i + 1, running_loss / 2000))
-            running_loss = 0.0
-
-print('Finished Training')
 PATH = './cnn.pth'
-torch.save(model.state_dict(), PATH)
+model.load_state_dict(torch.load(PATH))
 
-##########################################################test
 with torch.no_grad():
     n_correct = 0
     n_samples = 0
