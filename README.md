@@ -1,11 +1,16 @@
 # rotate_screen
 
-## Requirements
+Vidoes in Youtube are sometimes rotated in 90 degrees or 270 degrees.
+This project detects the angle of captured screen images by a CNN (convolutional neural netowork)
 
-1. Python
-There are many ways to install Python.
+## Trained CNN
 
-2. opencv
+Trained CNN is sotred in trained_model/cnn.pth
+
+## Example
+
+Run main.py will show a running example of this proejct.
 ```
-pip3 install opencv-python
+python3 main.py
 ```
+
