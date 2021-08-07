@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 #from IPython.display import clear_output #for colab
 
 
-classes = (0, 90, 180, 270)
+classes = (0, 90, 270)
 
 
 ##################################################################################
@@ -19,18 +19,21 @@ classes = (0, 90, 180, 270)
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 3) # 61, 61
-        self.conv2 = nn.Conv2d(6, 16, 4) # 28, 28
-        self.conv3 = nn.Conv2d(16, 32, 3) #  12, 12
-        self.fc1 = nn.Linear(32 * 6 * 6, 128)
-        self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 4)
+        self.conv1 = nn.Conv2d(3, 6, 3) #298, 298
+        self.conv2 = nn.Conv2d(6, 16, 3) #147, 147
+        self.conv3 = nn.Conv2d(16, 32, 3) #71, 71
+        self.conv4 = nn.Conv2d(32, 64, 3) #33, 33
+        self.fc1 = nn.Linear(64 * 16 * 16, 256)
+        self.fc2 = nn.Linear(256, 64)
+        self.fc3 = nn.Linear(64, 3)
 
     def forward(self, x):
-        x = F.max_pool2d(F.relu(self.conv1(x)), 2, 2) # 62, 62 -> 31, 31
-        x = F.max_pool2d(F.relu(self.conv2(x)), 2, 2) # 28, 28 -> 14, 14
-        x = F.max_pool2d(F.relu(self.conv3(x)), 2, 2) # 12, 12 -> 6, 6
-        x = x.view(-1, 32 * 6 * 6)
+        x = F.max_pool2d(F.relu(self.conv1(x)), 2, 2) # 62, 62 -> 31, 31        #298, 298 -> 149, 149
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2, 2) # 28, 28 -> 14, 14        #147, 147 -> 73, 73
+        x = F.max_pool2d(F.relu(self.conv3(x)), 2, 2) # 12, 12 -> 6, 6          #71, 71 -> 35, 35
+        x = F.max_pool2d(F.relu(self.conv4(x)), 2, 2)  # 12, 12 -> 6, 6          #33, 33 ->16, 16
+        # print(x.size())
+        x = x.view(-1, 64 * 16 * 16)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -76,16 +79,23 @@ w_size = pg.size() # w_size[0]: width, w_size[1]: height
 
 while True:
     img = PIL.ImageGrab.grab((30, 150, 800, 550)) # x_left, y_left, x_right, y_right
-    img_small = img.resize((64, 64))
+    img_small = img.resize((300, 300))
     img_tensor = tf(img_small)
     img_tensor = torch.unsqueeze(img_tensor, 0)
 
     output = model(img_tensor)
     _, predicted = torch.max(output, 1) #returns value, index
-    print(output, classes[predicted])
+    angle = int(classes[predicted])
+    print(output, angle)
 
     img_frame = np.array(img)
     img_frame = cv2.cvtColor(img_frame, cv2.COLOR_RGB2BGR)
+
+    if angle == 90:
+        img_frame = rotate_image(img_frame, 270)
+    elif angle == 270:
+        img_frame = rotate_image(img_frame, 90)
+
     mywin = "mywindow"
     cv2.namedWindow(mywin)   # create a named window
     cv2.moveWindow(mywin, 1540, 100)   # Move it to (40, 30)
