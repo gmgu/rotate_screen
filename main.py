@@ -8,8 +8,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-#from IPython.display import clear_output #for colab
-
+import pandas as pd
+# from IPython.display import clear_output #for colab
 
 classes = (0, 90, 270)
 
@@ -19,21 +19,21 @@ classes = (0, 90, 270)
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 3) #298, 298
-        self.conv2 = nn.Conv2d(6, 16, 3) #147, 147
-        self.conv3 = nn.Conv2d(16, 32, 3) #71, 71
-        self.conv4 = nn.Conv2d(32, 64, 3) #33, 33
-        self.fc1 = nn.Linear(64 * 16 * 16, 256)
+        self.conv1 = nn.Conv2d(3, 6, 3)
+        self.conv2 = nn.Conv2d(6, 16, 3)
+        self.conv3 = nn.Conv2d(16, 32, 3)
+        self.conv4 = nn.Conv2d(32, 64, 3)
+        self.fc1 = nn.Linear(64 * 14 * 14, 256)
         self.fc2 = nn.Linear(256, 64)
         self.fc3 = nn.Linear(64, 3)
 
     def forward(self, x):
-        x = F.max_pool2d(F.relu(self.conv1(x)), 2, 2) # 62, 62 -> 31, 31        #298, 298 -> 149, 149
-        x = F.max_pool2d(F.relu(self.conv2(x)), 2, 2) # 28, 28 -> 14, 14        #147, 147 -> 73, 73
-        x = F.max_pool2d(F.relu(self.conv3(x)), 2, 2) # 12, 12 -> 6, 6          #71, 71 -> 35, 35
-        x = F.max_pool2d(F.relu(self.conv4(x)), 2, 2)  # 12, 12 -> 6, 6          #33, 33 ->16, 16
+        x = F.max_pool2d(F.relu(self.conv1(x)), 2, 2)  # 254, 254 -> 127, 127
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2, 2)  # 125, 125 -> 62, 62
+        x = F.max_pool2d(F.relu(self.conv3(x)), 2, 2)  # 60, 60 -> 30, 30
+        x = F.max_pool2d(F.relu(self.conv4(x)), 2, 2)  # 28, 28 -> 14, 14
         # print(x.size())
-        x = x.view(-1, 64 * 16 * 16)
+        x = x.view(-1, 64 * 14 * 14)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -64,57 +64,62 @@ def rotate_image(image, angle):
     #result = cv2.warpAffine(image, rot_mat, (0, 0))  # rotate image
     #return result
 
+
 def resize_image(image, width, height):
     result = cv2.resize(image, dsize=(width, height), interpolation=cv2.INTER_AREA)
     return result
 
+
 ###################################
 model = CNN()
-PATH = './trained_model/cnn.pth'
+PATH = 'trained_model/256_cnn.pth'
 model.load_state_dict(torch.load(PATH))
 ###################################
 
-tf = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+tf = transforms.Compose([
+    transforms.CenterCrop(714),
+    transforms.Resize(256),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+])
 w_size = pg.size() # w_size[0]: width, w_size[1]: height
 
+queue = []# QUEUE_SIZE frame results
+QUEUE_SIZE = 100
+
+mywin = "mywindow"
+cv2.namedWindow(mywin)   # create a named window
+cv2.moveWindow(mywin, 1400, 0)   # Move it to (40, 30)
+
 while True:
-    img = PIL.ImageGrab.grab((30, 150, 800, 550)) # x_left, y_left, x_right, y_right
-    img_small = img.resize((300, 300))
-    img_tensor = tf(img_small)
-    img_tensor = torch.unsqueeze(img_tensor, 0)
+    with torch.no_grad():
+        img = PIL.ImageGrab.grab((0, 150, w_size[0], w_size[1] - 150))  # x_left, y_left, x_right, y_right
+        img_tensor = tf(img)
+        img_tensor = torch.unsqueeze(img_tensor, 0)
 
-    output = model(img_tensor)
-    _, predicted = torch.max(output, 1) #returns value, index
-    angle = int(classes[predicted])
-    print(output, angle)
+        output = model(img_tensor)
+        _, predicted = torch.max(output, 1) #returns value, index
+        angle = int(classes[predicted])
+        print(output, angle)
 
-    img_frame = np.array(img)
-    img_frame = cv2.cvtColor(img_frame, cv2.COLOR_RGB2BGR)
+        queue.append(angle)
+        if len(queue) > QUEUE_SIZE:
+            queue.pop(0)
 
-    if angle == 90:
-        img_frame = rotate_image(img_frame, 270)
-    elif angle == 270:
-        img_frame = rotate_image(img_frame, 90)
+        SCALE = 0.8
+        img_scale = img.resize(
+            (int(w_size[0] * SCALE), int((w_size[1]) * SCALE))
+             )
+        img_frame = np.array(img_scale)
+        img_frame = cv2.cvtColor(img_frame, cv2.COLOR_RGB2BGR)
 
-    mywin = "mywindow"
-    cv2.namedWindow(mywin)   # create a named window
-    cv2.moveWindow(mywin, 1540, 100)   # Move it to (40, 30)
-    cv2.imshow(mywin, img_frame)
-    if cv2.waitKey(100) == ord('q'):
-        #cv2.destroyAllWindows()
-        break
+        max_angle = max(set(queue), key=queue.count)
+        if max_angle == 90:
+            img_frame = rotate_image(img_frame, 270)
+        elif max_angle == 270:
+            img_frame = rotate_image(img_frame, 90)
+
+        cv2.imshow(mywin, img_frame)
+        if cv2.waitKey(5) == ord('q'):
+            break
 cv2.destroyAllWindows()
-
-
-
-#img = cv2.imread("trash/image.jpg")
-# img90 = rotate_image(img, 90)
-# cv2.imwrite("image90.jpg", img90)
-
-
-#for i in range(0, 360, 30):
-#    img2 = rotate_image(img, i)
-#    img3 = resize_image(img2, 200, 200)
-#    cv2.imshow(mywin, img3)
-#    cv2.waitKey(1000)
-#    cv2.destroyAllWindows()

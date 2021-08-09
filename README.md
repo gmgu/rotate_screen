@@ -14,3 +14,10 @@ Run main.py will show a running example of this proejct.
 python3 main.py
 ```
 
+## Accuracy
+Current accuracy is as follows (using 256_cnn.pth)
+- Accuracy of the network: 76.27467105263158 %
+- Accuracy of 0: 75.30864197530865 %
+- Accuracy of 90: 73.61282367447596 %
+- Accuracy of 270: 79.90135635018495 %
+
