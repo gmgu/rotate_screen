@@ -17,7 +17,7 @@ import PIL
 torch.manual_seed(0)
 
 # Hyper-parameters
-num_epochs = 3
+num_epochs = 30
 batch_size = 8
 learning_rate = 0.001
 
@@ -52,8 +52,8 @@ class ImageDataset(Dataset):
 classes = (0, 90, 270)
 
 transform = transforms.Compose([
-    transforms.CenterCrop(714),
-    transforms.Resize(256),
+    #transforms.CenterCrop(714),
+    transforms.Resize((256,256)),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
@@ -136,7 +136,7 @@ for epoch in range(num_epochs):
             running_loss = 0.0
 
 print('Finished Training')
-PATH = './trained_model/cnn.pth'
+PATH = './trained_model/256_cnn.pth'
 torch.save(model.state_dict(), PATH)
 
 ##########################################################test

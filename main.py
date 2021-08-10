@@ -82,7 +82,7 @@ tf = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
-w_size = pg.size() # w_size[0]: width, w_size[1]: height
+w_size = pg.size()  # w_size[0]: width, w_size[1]: height
 
 queue = []# QUEUE_SIZE frame results
 QUEUE_SIZE = 100
@@ -90,9 +90,10 @@ QUEUE_SIZE = 100
 mywin = "mywindow"
 cv2.namedWindow(mywin)   # create a named window
 cv2.moveWindow(mywin, 1400, 0)   # Move it to (40, 30)
-
+i = 0
 while True:
     with torch.no_grad():
+        i += 1
         img = PIL.ImageGrab.grab((0, 150, w_size[0], w_size[1] - 150))  # x_left, y_left, x_right, y_right
         img_tensor = tf(img)
         img_tensor = torch.unsqueeze(img_tensor, 0)
@@ -106,6 +107,7 @@ while True:
         if len(queue) > QUEUE_SIZE:
             queue.pop(0)
 
+        img = PIL.ImageGrab.grab((0, 0, w_size[0], w_size[1]))  # full screen capture
         SCALE = 0.8
         img_scale = img.resize(
             (int(w_size[0] * SCALE), int((w_size[1]) * SCALE))
@@ -120,6 +122,6 @@ while True:
             img_frame = rotate_image(img_frame, 90)
 
         cv2.imshow(mywin, img_frame)
-        if cv2.waitKey(5) == ord('q'):
+        if cv2.waitKey(1) == ord('q'):
             break
 cv2.destroyAllWindows()
