@@ -10,3 +10,88 @@ Accuracy of the network: 76.27467105263158 %
 Accuracy of 0: 75.30864197530865 %
 Accuracy of 90: 73.61282367447596 %
 Accuracy of 270: 79.90135635018495 %
+
+
+#########image size = 256 RandomCrop 224 / FiveCrop 224, 2 dropouts, epoch=2
+Epoch: 2, Iter: 2300, Loss: 12.3431 Acc: 96.375
+Finished Training: 12 min 1 sec
+Saving model...Done.
+Accuracy of the network: 53.453947368421055 %
+Accuracy of 0: 41.23456790123457 %
+Accuracy of 90: 81.6276202219482 %
+Accuracy of 270: 37.4845869297164 %
+
+
+#########image size = 256 RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=2
+Epoch: 2, Iter: 2300, Loss: 14.75 Accuracy: 95.50 %
+Finished Training: 12 min 6 sec
+Saving model...Done.
+Testing...Test Accuracy: 65.75 %
+Accuracy of 0: 65.67901234567901 %
+Accuracy of 90: 73.11960542540074 %
+Accuracy of 270: 58.44636251541307 %
+
+
+#########image size = 256 RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=4
+Epoch: 2, Iter: 2300, Loss: 7.17 Accuracy: 97.38 %
+Finished Training: 11 min 57 sec
+Saving model...Done.
+Testing...Test Accuracy: 75.53 %
+Accuracy of 0: 67.78 %
+Accuracy of 90: 83.97 %
+Accuracy of 270: 74.85 %
+
+#########image size = 256 RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=6
+Epoch: 2, Iter: 2300, Loss: 7.58 Accuracy: 97.75 %
+Finished Training: 12 min 5 sec
+Saving model...Done.
+Testing...Test Accuracy: 58.35 %
+Accuracy of 0: 49.01 %
+Accuracy of 90: 73.98 %
+Accuracy of 270: 52.03 %
+
+#########image size = 256 RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=8
+Epoch: 2, Iter: 2300, Loss: 12.39 Accuracy: 96.00 %
+Finished Training: 12 min 32 sec
+Saving model...Done.
+Testing...Test Accuracy: 71.46 %
+Accuracy of 0: 67.90 %
+Accuracy of 90: 79.04 %
+Accuracy of 270: 67.45 %
+
+#########image size = 256 RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=12
+Epoch: 4, Iter: 2300, Loss: 4.28 Accuracy: 98.25 %
+Finished Training: 24 min 30 sec
+Saving model...Done.
+Testing...Test Accuracy: 76.52 %
+Accuracy of 0: 68.89 %
+Accuracy of 90: 80.15 %
+Accuracy of 270: 80.52 %
+
+
+#########image size = 256, GrayScale, RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=4
+Epoch: 4, Iter: 2300, Loss: 13.78 Accuracy: 95.12 %
+Finished Training: 23 min 58 sec
+Saving model...Done.
+Testing...Test Accuracy: 53.00 %
+Accuracy of 0: 57.04 %
+Accuracy of 90: 46.24 %
+Accuracy of 270: 55.73 %
+
+#########image size = 256, GrayScale, RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=4 + 4
+Epoch: 4, Iter: 2300, Loss: 11.24 Accuracy: 97.25 %
+Finished Training: 23 min 11 sec
+Saving model...Done.
+Testing...Test Accuracy: 58.35 %
+Accuracy of 0: 50.25 %
+Accuracy of 90: 57.09 %
+Accuracy of 270: 67.69 %
+
+#########image size = 256, GrayScale, RandomCrop 224 / FiveCrop 224, 3 dropouts, epoch=4 + 4 + 4
+Epoch: 4, Iter: 2300, Loss: 7.67 Accuracy: 97.25 %
+Finished Training: 22 min 60 sec
+Saving model...Done.
+Testing...Test Accuracy: 63.90 %
+Accuracy of 0: 47.65 %
+Accuracy of 90: 75.22 %
+Accuracy of 270: 68.80 %

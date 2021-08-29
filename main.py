@@ -19,23 +19,30 @@ classes = (0, 90, 270)
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 3)
+        self.conv1 = nn.Conv2d(1, 6, 3)
         self.conv2 = nn.Conv2d(6, 16, 3)
         self.conv3 = nn.Conv2d(16, 32, 3)
         self.conv4 = nn.Conv2d(32, 64, 3)
-        self.fc1 = nn.Linear(64 * 14 * 14, 256)
+        self.dropout = nn.Dropout(p=0.5)
+        self.fc1 = nn.Linear(64 * 12 * 12, 256)
         self.fc2 = nn.Linear(256, 64)
         self.fc3 = nn.Linear(64, 3)
 
     def forward(self, x):
-        x = F.max_pool2d(F.relu(self.conv1(x)), 2, 2)  # 254, 254 -> 127, 127
-        x = F.max_pool2d(F.relu(self.conv2(x)), 2, 2)  # 125, 125 -> 62, 62
-        x = F.max_pool2d(F.relu(self.conv3(x)), 2, 2)  # 60, 60 -> 30, 30
-        x = F.max_pool2d(F.relu(self.conv4(x)), 2, 2)  # 28, 28 -> 14, 14
+        x = F.max_pool2d(F.relu(self.conv1(x)), 2, 2)  # 222, 222 -> 111, 111
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2, 2)  # 109, 109 -> 54, 54
+        x = F.max_pool2d(F.relu(self.conv3(x)), 2, 2)  # 52, 52 -> 26, 26
+        x = F.max_pool2d(F.relu(self.conv4(x)), 2, 2)  # 24, 24 -> 12, 12
+
         # print(x.size())
-        x = x.view(-1, 64 * 14 * 14)
+        x = x.view(-1, 64 * 12 * 12)
+        x = self.dropout(x)
         x = F.relu(self.fc1(x))
+
+        x = self.dropout(x)
         x = F.relu(self.fc2(x))
+
+        x = self.dropout(x)
         x = self.fc3(x)
         return x
 
@@ -72,34 +79,44 @@ def resize_image(image, width, height):
 
 ###################################
 model = CNN()
-PATH = 'trained_model/256_cnn.pth'
+PATH = 'trained_model/cnn.pth'
 model.load_state_dict(torch.load(PATH))
 ###################################
 
 tf = transforms.Compose([
-    transforms.CenterCrop(714),
-    transforms.Resize(256),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.Grayscale(),
+    transforms.Resize((256, 256)),
+    #transforms.RandomCrop((224, 224)),
+    #transforms.ToTensor(),
+    transforms.FiveCrop((224, 224)),
+    transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
+    transforms.Normalize(0.5, 0.5)
+    #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 w_size = pg.size()  # w_size[0]: width, w_size[1]: height
 
 queue = []# QUEUE_SIZE frame results
-QUEUE_SIZE = 100
+QUEUE_SIZE = 20
 
 mywin = "mywindow"
 cv2.namedWindow(mywin)   # create a named window
-cv2.moveWindow(mywin, 1400, 0)   # Move it to (40, 30)
+cv2.moveWindow(mywin, 1260, -50)   # Move it to (40, 30)
 i = 0
+
+model.eval()
 while True:
     with torch.no_grad():
         i += 1
-        img = PIL.ImageGrab.grab((0, 150, w_size[0], w_size[1] - 150))  # x_left, y_left, x_right, y_right
+        #img = PIL.ImageGrab.grab((0, 150, w_size[0], w_size[1] - 150))  # x_left, y_left, x_right, y_right
+        img = PIL.ImageGrab.grab((0, 0, w_size[0], w_size[1]))  # x_left, y_left, x_right, y_right
         img_tensor = tf(img)
-        img_tensor = torch.unsqueeze(img_tensor, 0)
+        #img_tensor = torch.unsqueeze(img_tensor, 0)
 
         output = model(img_tensor)
-        _, predicted = torch.max(output, 1) #returns value, index
+        #print(output.shape)
+        output = output.mean(0)
+        #print(output.shape)
+        _, predicted = torch.max(output, 0) #returns value, index
         angle = int(classes[predicted])
         print(output, angle)
 
@@ -107,12 +124,10 @@ while True:
         if len(queue) > QUEUE_SIZE:
             queue.pop(0)
 
-        img = PIL.ImageGrab.grab((0, 0, w_size[0], w_size[1]))  # full screen capture
+        #img = PIL.ImageGrab.grab((0, 0, w_size[0], w_size[1]))  # full screen capture
         SCALE = 0.8
-        img_scale = img.resize(
-            (int(w_size[0] * SCALE), int((w_size[1]) * SCALE))
-             )
-        img_frame = np.array(img_scale)
+        img_scale = img.resize((int(w_size[0] * SCALE), int((w_size[1]) * SCALE)))
+        img_frame = np.array(img_scale)  # img_frame = np.array(img)
         img_frame = cv2.cvtColor(img_frame, cv2.COLOR_RGB2BGR)
 
         max_angle = max(set(queue), key=queue.count)
